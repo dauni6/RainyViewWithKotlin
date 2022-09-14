@@ -14,6 +14,13 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.math.*
 
+/**
+ * 호출 순서
+ * 1) init() - 1번
+ * 2) onMeasure() - 2번
+ * 3) onSizeChanged() - 1번
+ * 4) onDraw() - 여러번 계속
+ * */
 class RainyView : View {
 
     companion object {
@@ -25,7 +32,7 @@ class RainyView : View {
         private const val DEFAULT_DROP_SIZE = 15 //the default drop size of drop
         private const val DEFAULT_DROP_MAX_SPEECH = 5f //the default max speech value
         private const val DEFAULT_DROP_MIN_SPEECH = 1f //the default max speech value
-        private const val DEFAULT_DROP_SLOPE = -3f // the default drop slope
+        private const val DEFAULT_DROP_SLOPE = -3f // the default drop slope 빗방울 경사 방항(양수 : 오른쪽 방향으로 내림, 음수 : 왼쪽방향으로 내림)
 
         private val DEFAULT_LEFT_CLOUD_COLOR = Color.parseColor("#B0B0B0")
         private val DEFAULT_RIGHT_CLOUD_COLOR = Color.parseColor("#DFDFDF")
@@ -42,15 +49,11 @@ class RainyView : View {
     private var mRainColor: Int = DEFAULT_RAIN_COLOR
 
     //There are two clouds in this view, includes the left cloud & right cloud
-    private var mLeftCloudPath //the left cloud's path
-            : Path? = null
-    private var mRightCloudPath //the right cloud's path
-            : Path? = null
+    private var mLeftCloudPath: Path? = null //the left cloud's path
+    private var mRightCloudPath: Path? = null //the right cloud's path
 
-    private var mRainRect //the rain rect
-            : RectF? = null
-    private var mRainClipRect //the rain clip rect
-            : RectF? = null
+    private var mRainRect: RectF? = null //the rain rect
+    private var mRainClipRect: RectF? = null //the rain clip rect
 
     private var mLeftCloudAnimator: ValueAnimator? = null
     private var mRightCloudAnimator: ValueAnimator? = null
@@ -58,12 +61,11 @@ class RainyView : View {
     private var mLeftCloudAnimatorPlayTime: Long = 0
     private var mRightCloudAnimatorPlayTime: Long = 0
 
-    private var mMaxTranslationX //The max translation x when do animation.
-            = 0f
-    private var mLeftCloudAnimatorValue //The left cloud animator value
-            = 0f
-    private var mRightCloudAnimatorValue //The right cloud animator value
-            = 0f
+    private var mMaxTranslationX = 0f //The max translation x when do animation.
+
+    private var mLeftCloudAnimatorValue = 0f //The left cloud animator value
+
+    private var mRightCloudAnimatorValue = 0f //The right cloud animator value
 
     private val mComputePath = Path() //The path for computing
 
@@ -87,7 +89,7 @@ class RainyView : View {
     private var mRainDropMinSpeed: Float = DEFAULT_DROP_MIN_SPEECH
     private var mRainDropSlope: Float = DEFAULT_DROP_SLOPE
 
-    private var mRainDropCreationTime: Long = 0
+    private var mRainDropCreationTime: Long = 0L
 
     @JvmOverloads
     constructor(context: Context?, attrs: AttributeSet? = null, defStyleAttr: Int = 0) : super(
@@ -115,7 +117,6 @@ class RainyView : View {
         // 지정한 <declare-styleable> attributes 로드하기
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.RainyView)
         // 정의한 color값을 가져오거나 default값들을 사용하기
-        // 정의한 color값을 가져오거나 default값 사용하기
         mLeftCloudColor = typedArray.getColor(R.styleable.RainyView_left_cloud_color, DEFAULT_LEFT_CLOUD_COLOR)
         mRightCloudColor = typedArray.getColor(R.styleable.RainyView_right_cloud_color, DEFAULT_RIGHT_CLOUD_COLOR)
         mRainColor = typedArray.getColor(R.styleable.RainyView_raindrop_color, DEFAULT_RAIN_COLOR)
@@ -152,19 +153,22 @@ class RainyView : View {
 
         // 하드웨어 가속화가 되어있는지 확인하기 위한 코드
         Log.d("TEST", "View is HardwareAccelerated() is $isHardwareAccelerated")
-        mLeftCloudPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        mLeftCloudPaint?.color = mLeftCloudColor
-        mLeftCloudPaint?.style = Paint.Style.FILL
+        mLeftCloudPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = mLeftCloudColor
+            style = Paint.Style.FILL
+        }
 
-        mRightCloudPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        mRightCloudPaint?.color = mRightCloudColor
-        mRightCloudPaint?.style = Paint.Style.FILL
+        mRightCloudPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = mRightCloudColor
+            style = Paint.Style.FILL
+        }
 
-        mRainPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-        mRainPaint?.strokeCap = Paint.Cap.ROUND
-        mRainPaint?.color = mRainColor
-        mRainPaint?.style = Paint.Style.STROKE
-        mRainPaint?.strokeWidth = mRainDropSize.toFloat()
+        mRainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            strokeCap = Paint.Cap.ROUND
+            color = mRainColor
+            style = Paint.Style.STROKE
+            strokeWidth = mRainDropSize.toFloat()
+        }
 
         mLeftCloudPath = Path()
         mRightCloudPath = Path()
@@ -177,15 +181,16 @@ class RainyView : View {
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        Log.d("TEST", "onMeasure() is called.")
         val widthSpecSize = MeasureSpec.getSize(widthMeasureSpec)
         val widthSpecMode = MeasureSpec.getMode(widthMeasureSpec)
 
-        Log.d("TEST", "widthSpecSize = $widthSpecSize / widthSpecMode = $widthSpecMode")
+//        Log.d("TEST", "widthSpecSize = $widthSpecSize / widthSpecMode = $widthSpecMode")
 
         val heightSpecSize = MeasureSpec.getSize(heightMeasureSpec)
         val heightSpecMode = MeasureSpec.getMode(heightMeasureSpec)
 
-        Log.d("TEST", "heightSpecSize = $heightSpecSize / heightSpecMode = $heightSpecMode")
+//        Log.d("TEST", "heightSpecSize = $heightSpecSize / heightSpecMode = $heightSpecMode")
 
         var w = widthSpecSize
         var h = heightSpecSize
@@ -204,15 +209,16 @@ class RainyView : View {
             h = DEFAULT_SIZE
         }
 
-        setMeasuredDimension(w, h) // onMeasure()는 값을 반환하지 않고, setMeasureDimension()을 호출하여 너비와 높이를 명시저으로 설정한다.
+        setMeasuredDimension(w, h) // onMeasure()는 값을 반환하지 않고, setMeasureDimension()을 호출하여 너비와 높이를 명시적으로 설정한다.
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        Log.d("TEST", "onSizeChanged() is called.")
         super.onSizeChanged(w, h, oldw, oldh)
         stop()
 
-        mLeftCloudPath!!.reset()
-        mRightCloudPath!!.reset()
+        mLeftCloudPath?.reset()
+        mRightCloudPath?.reset()
 
         val centerX = (w / 2).toFloat() //view's center x coordinate
 
@@ -226,7 +232,7 @@ class RainyView : View {
         val leftCloudEndY = (h / 3).toFloat() //clouds' end y coordinate
 
         //add the bottom round rect
-        mLeftCloudPath!!.addRoundRect(
+        mLeftCloudPath?.addRoundRect(
             RectF(leftCloudEndX - leftCloudWidth, leftCloudEndY - leftCloudBottomHeight, leftCloudEndX, leftCloudEndY), leftCloudBottomHeight, leftCloudBottomHeight, Path.Direction.CW
         )
 
@@ -234,13 +240,13 @@ class RainyView : View {
         val leftCloudRightTopCenterX = leftCloudEndX - leftCloudBottomHeight
         val leftCloudLeftTopCenterX = leftCloudEndX - leftCloudWidth + leftCloudBottomHeight
 
-        mLeftCloudPath!!.addCircle(
+        mLeftCloudPath?.addCircle(
             leftCloudRightTopCenterX,
             leftCloudTopCenterY,
             leftCloudBottomHeight * 3 / 4,
             Path.Direction.CW
         )
-        mLeftCloudPath!!.addCircle(
+        mLeftCloudPath?.addCircle(
             leftCloudLeftTopCenterX,
             leftCloudTopCenterY,
             leftCloudBottomHeight / 2,
@@ -252,27 +258,21 @@ class RainyView : View {
         //The cloud on the right is CLOUD_SCALE_RATIO size of the left
         val rightCloudCenterX = rightCloudTranslateX + centerX - leftCloudWidth / 2 //the right cloud center x
         val calculateRect = RectF()
-        mLeftCloudPath!!.computeBounds(calculateRect, false) //compute the left cloud's path bounds
+        mLeftCloudPath?.computeBounds(calculateRect, false) //compute the left cloud's path bounds
 
 
         mComputeMatrix.reset()
-        mComputeMatrix.preTranslate(
-            rightCloudTranslateX,
-            -calculateRect.height() * (1 - CLOUD_SCALE_RATIO) / 2
-        )
+        mComputeMatrix.preTranslate(rightCloudTranslateX, -calculateRect.height() * (1 - CLOUD_SCALE_RATIO) / 2)
         mComputeMatrix.postScale(
             CLOUD_SCALE_RATIO,
             CLOUD_SCALE_RATIO,
             rightCloudCenterX,
             leftCloudEndY
         )
-        mLeftCloudPath!!.transform(mComputeMatrix, mRightCloudPath)
+        mLeftCloudPath?.transform(mComputeMatrix, mRightCloudPath)
 
         val left = calculateRect.left + leftCloudBottomHeight
-        mRightCloudPath!!.computeBounds(
-            calculateRect,
-            false
-        ) //compute the right cloud's path bounds
+        mRightCloudPath?.computeBounds(calculateRect, false) //compute the right cloud's path bounds
 
 
         val right = calculateRect.right
@@ -286,36 +286,45 @@ class RainyView : View {
         setupAnimator()
     }
 
+    // Animator 최초로 만듦
     private fun setupAnimator() {
         mLeftCloudAnimatorPlayTime = 0
         mRightCloudAnimatorPlayTime = 0
-        mLeftCloudAnimator = ValueAnimator.ofFloat(0f, 1f)
-        mLeftCloudAnimator?.repeatCount = ValueAnimator.INFINITE
-        mLeftCloudAnimator?.duration = 1000
-        mLeftCloudAnimator?.interpolator = LinearInterpolator()
-        mLeftCloudAnimator?.repeatMode = ValueAnimator.REVERSE
-        mLeftCloudAnimator?.addUpdateListener(AnimatorUpdateListener { animation ->
-            mLeftCloudAnimatorValue = animation.animatedValue as Float
-            invalidate()
-        })
-        mRightCloudAnimator = ValueAnimator.ofFloat(1f, 0f)
-        mRightCloudAnimator?.repeatCount = ValueAnimator.INFINITE
-        mRightCloudAnimator?.duration = 800
-        mRightCloudAnimator?.interpolator = LinearInterpolator()
-        mRightCloudAnimator?.repeatMode = ValueAnimator.REVERSE
-        mRightCloudAnimator?.addUpdateListener(AnimatorUpdateListener { animation ->
-            mRightCloudAnimatorValue = animation.animatedValue as Float
-            invalidate()
-        })
-        mLeftCloudAnimator?.start()
-        mRightCloudAnimator?.start()
+        mLeftCloudAnimator = ValueAnimator.ofFloat(0f, 1f).apply {
+            repeatCount = ValueAnimator.INFINITE
+            duration = 1000L
+            interpolator = LinearInterpolator()
+            repeatMode = ValueAnimator.REVERSE
+            addUpdateListener { animation ->
+                // addUpdateListener에서 진행중인 값을 사용할 수 있다.
+                mLeftCloudAnimatorValue = animation.animatedValue as Float
+                invalidate() // invalidate()를 통해 View의 모양이 바꼈다는 것을 강제로 알림
+            }
+        }
+        mRightCloudAnimator = ValueAnimator.ofFloat(1f, 0f).apply {
+            repeatCount = ValueAnimator.INFINITE
+            duration = 800
+            interpolator = LinearInterpolator()
+            repeatMode = ValueAnimator.REVERSE
+            addUpdateListener { animation ->
+                // addUpdateListener에서 진행중인 값을 사용할 수 있다.
+                mRightCloudAnimatorValue = animation.animatedValue as Float
+                invalidate() // invalidate()를 통해 View의 모양이 바꼈다는 것을 강제로 알림
+            }
+        }
+        mLeftCloudAnimator?.start() // 애니메이션 시작
+        mRightCloudAnimator?.start() // 애니메이션 시작
         mHandler?.post(mTask)
     }
 
+    // 그리기
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
+        Log.d("TEST", "onDraw() is called.")
         if (canvas == null) return
 
+        // todo : 왜 save()하고 바로 밑에서 restore() 하는걸까 ??
+        // https://stackoverflow.com/questions/29040064/save-canvas-then-restore-why-is-that
         canvas.save()
         // canvas.drawRect(mRainRect, new Paint());
         canvas.clipRect(mRainClipRect!!)
@@ -324,12 +333,12 @@ class RainyView : View {
 
         mComputeMatrix.reset()
         mComputeMatrix.postTranslate(mMaxTranslationX / 2 * mRightCloudAnimatorValue, 0f)
-        mRightCloudPath!!.transform(mComputeMatrix, mComputePath)
+        mRightCloudPath?.transform(mComputeMatrix, mComputePath)
         canvas.drawPath(mComputePath, mRightCloudPaint!!)
 
         mComputeMatrix.reset()
         mComputeMatrix.postTranslate(mMaxTranslationX * mLeftCloudAnimatorValue, 0f)
-        mLeftCloudPath!!.transform(mComputeMatrix, mComputePath)
+        mLeftCloudPath?.transform(mComputeMatrix, mComputePath)
         canvas.drawPath(mComputePath, mLeftCloudPaint!!)
     }
 
@@ -377,14 +386,14 @@ class RainyView : View {
         }
         mRemovedRainDrops?.clear()
         mRainDrops?.clear()
-        mRecycler!!.clear()
+        mRecycler?.clear()
         mHandler = null
     }
 
     /**
      * To optimize performance, use recycler [.mRecycler]
      */
-    private fun obtainRainDrop(): RainDrop? {
+    private fun obtainRainDrop(): RainDrop {
         return if (mRecycler!!.isEmpty()) {
             RainDrop()
         } else mRecycler!!.pop()
@@ -428,24 +437,24 @@ class RainyView : View {
         if (current - mRainDropCreationTime < mRainDropCreationInterval) {
             return
         }
-        require(
-            !(mRainDropMinLength > mRainDropMaxLength
-                    || mRainDropMinSpeed > mRainDropMaxSpeed)
-        ) { "The minimum value cannot be greater than the maximum value." }
+        require(!(mRainDropMinLength > mRainDropMaxLength || mRainDropMinSpeed > mRainDropMaxSpeed)) {
+            "The minimum value cannot be greater than the maximum value."
+        }
         mRainDropCreationTime = current
-        val rainDrop = obtainRainDrop()
-        rainDrop!!.slope = mRainDropSlope
-        rainDrop.speedX = mRainDropMinSpeed + mOnlyRandom.nextFloat() * mRainDropMaxSpeed
-        rainDrop.speedY = rainDrop.speedX * abs(rainDrop.slope)
-        val rainDropLength =
-            (mRainDropMinLength + mOnlyRandom.nextInt(mRainDropMaxLength - mRainDropMinLength)).toFloat()
-        val degree = Math.toDegrees(atan(rainDrop.slope.toDouble()))
-        rainDrop.xLength = abs(cos(degree * Math.PI / 180) * rainDropLength).toFloat()
-        rainDrop.yLength = abs(sin(degree * Math.PI / 180) * rainDropLength).toFloat()
-        rainDrop.x = mRainRect!!.left + mOnlyRandom.nextInt(
-            mRainRect!!.width().toInt()
-        ) //random x coordinate
-        rainDrop.y = mRainRect!!.top - rainDrop.yLength //the fixed y coordinate
+        val rainDrop = obtainRainDrop().apply {
+            slope = mRainDropSlope
+            speedX = mRainDropMinSpeed + mOnlyRandom.nextFloat() * mRainDropMaxSpeed
+            speedY = this.speedX * abs(this.slope)
+
+            val rainDropLength = (mRainDropMinLength + mOnlyRandom.nextInt(mRainDropMaxLength - mRainDropMinLength)).toFloat()
+            val degree = Math.toDegrees(atan(this.slope.toDouble()))
+            xLength = abs(cos(degree * Math.PI / 180) * rainDropLength).toFloat()
+            yLength = abs(sin(degree * Math.PI / 180) * rainDropLength).toFloat()
+            x = mRainRect!!.left + mOnlyRandom.nextInt(
+                mRainRect!!.width().toInt()
+            ) //random x coordinate
+            y = mRainRect!!.top - this.yLength //the fixed y coordinate
+        }
         mRainDrops?.add(rainDrop)
     }
 
@@ -479,12 +488,11 @@ class RainyView : View {
     private fun drawRainDrops(canvas: Canvas) {
         if (mRainDrops == null) return
         for (rainDrop in mRainDrops!!) {
-            canvas.drawLine(
-                rainDrop.x, rainDrop.y,
-                if (rainDrop.slope > 0) rainDrop.x + rainDrop.xLength else rainDrop.x - rainDrop.xLength,
-                rainDrop.y + rainDrop.yLength,
-                mRainPaint!!
-            )
+            val startX = rainDrop.x
+            val startY = rainDrop.y
+            val stopX = if (rainDrop.slope > 0) rainDrop.x + rainDrop.xLength else rainDrop.x - rainDrop.xLength
+            val stopY = rainDrop.y + rainDrop.yLength
+            canvas.drawLine(startX, startY, stopX, stopY, mRainPaint!!)
         }
     }
 
@@ -551,7 +559,9 @@ class RainyView : View {
     fun setRightCloudColor(rightCloudColor: Int) {
         mRightCloudColor = rightCloudColor
         mRightCloudPaint!!.color = mRightCloudColor
-        postInvalidate()
+        postInvalidate() // 보통 View의 모양이 바뀌면 invalidate()를 사용하여 View를 다시 그리는데
+        // invalidate()의 경우에는 ui-thread에서만 사용가능하다.
+        // postInvalidate()는 non-ui-thread에서 사용가능하다.
     }
 
     /**
